@@ -17,6 +17,7 @@ type Mem struct {
 	MemFree      uint64
 	MemUsed      uint64
 	MemUsedRate  float64 //物理内存使用率
+	MemAvailable uint64
 	SwapTotal    uint64
 	SwapUsed     uint64
 	SwapUsedRate float64 //交换内存使用率
@@ -30,14 +31,16 @@ var WANT = map[string]struct{}{
 	"MemFree:":   struct{}{},
 	"SwapTotal:": struct{}{},
 	"SwapFree:":  struct{}{},
+	"MemAvailable:":  struct{}{},
 }
 
 func (this *Mem) Dump() {
-	fmt.Printf("Buffers:%d, Cached:%d, MemTotal:%d, MemFree:%d, SwapTotal:%d, SwapUsed:%d, SwapFree:%d (kb)",
+	fmt.Printf("Buffers:%d, Cached:%d, MemTotal:%d, MemFree:%d, MemAvailable:%d, SwapTotal:%d, SwapUsed:%d, SwapFree:%d (kb)",
 		this.Buffers,
 		this.Cached,
 		this.MemTotal,
 		this.MemFree,
+		this.MemAvailable,
 		this.SwapTotal,
 		this.SwapUsed,
 		this.SwapFree)
@@ -79,12 +82,19 @@ func (this *Mem) Collect() error {
 				this.SwapTotal = val
 			case "SwapFree:":
 				this.SwapFree = val
+			case "MemAvailable:":
+				this.MemAvailable = val
+		        
 			}
 		}
 	}
 	this.SwapUsed = this.SwapTotal - this.SwapFree
 	//free + buffer + cached 才是可实际使用的内存
-	this.MemFree = this.MemFree + this.Buffers + this.Cached
+	if this.MemAvailable > 0{
+	    this.MemFree = this.MemTotal - this.MemAvailable
+	}else{
+	    this.MemFree = this.MemFree + this.Buffers + this.Cached
+	}
 	this.MemUsed = this.MemTotal - this.MemFree
 	if this.MemTotal > 0 {
 		this.MemUsedRate = float64(this.MemUsed) / float64(this.MemTotal) * 100
