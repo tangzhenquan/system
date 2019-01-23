@@ -11,27 +11,28 @@ import (
 )
 
 type Mem struct {
-	Buffers      uint64
-	Cached       uint64
-	MemTotal     uint64
-	MemFree      uint64
-	MemUsed      uint64
-	MemUsedRate  float64 //物理内存使用率
-	MemAvailable uint64
-	SwapTotal    uint64
-	SwapUsed     uint64
-	SwapUsedRate float64 //交换内存使用率
-	SwapFree     uint64
+	Buffers          uint64
+	Cached           uint64
+	MemTotal         uint64
+	MemFree          uint64
+	MemUsed          uint64
+	MemUsedRate      float64 //物理内存使用率
+	MemAvailableRate float64 //物理内存可用率(对于内核大于3.14更准)
+	MemAvailable     uint64
+	SwapTotal        uint64
+	SwapUsed         uint64
+	SwapUsedRate     float64 //交换内存使用率
+	SwapFree         uint64
 }
 
 var WANT = map[string]struct{}{
-	"Buffers:":   struct{}{},
-	"Cached:":    struct{}{},
-	"MemTotal:":  struct{}{},
-	"MemFree:":   struct{}{},
-	"SwapTotal:": struct{}{},
-	"SwapFree:":  struct{}{},
-	"MemAvailable:":  struct{}{},
+	"Buffers:":      struct{}{},
+	"Cached:":       struct{}{},
+	"MemTotal:":     struct{}{},
+	"MemFree:":      struct{}{},
+	"SwapTotal:":    struct{}{},
+	"SwapFree:":     struct{}{},
+	"MemAvailable:": struct{}{},
 }
 
 func (this *Mem) Dump() {
@@ -84,20 +85,21 @@ func (this *Mem) Collect() error {
 				this.SwapFree = val
 			case "MemAvailable:":
 				this.MemAvailable = val
-		        
+
 			}
 		}
 	}
 	this.SwapUsed = this.SwapTotal - this.SwapFree
 	//free + buffer + cached 才是可实际使用的内存
-	if this.MemAvailable > 0{
-	    this.MemFree = this.MemTotal - this.MemAvailable
-	}else{
-	    this.MemFree = this.MemFree + this.Buffers + this.Cached
-	}
+	this.MemFree = this.MemFree + this.Buffers + this.Cached
 	this.MemUsed = this.MemTotal - this.MemFree
 	if this.MemTotal > 0 {
 		this.MemUsedRate = float64(this.MemUsed) / float64(this.MemTotal) * 100
+		if this.MemAvailable > 0 {
+			this.MemAvailableRate = float64(this.MemAvailableRate) / float64(this.MemTotal) * 100
+		} else {
+			this.MemAvailableRate = 100 - this.MemUsedRate
+		}
 	}
 	if this.SwapTotal > 0 {
 		this.SwapUsedRate = float64(this.SwapUsed) / float64(this.SwapTotal) * 100
