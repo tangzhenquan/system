@@ -158,6 +158,11 @@ func (this *Mem) MemUsedRateFunc(args string) string {
 	return FloatToString(this.MemUsedRate)
 }
 
+//物理内存可用率
+func (this *Mem) MemAvalibleRateFunc(args string) string {
+	return FloatToString(this.MemAvailableRate)
+}
+
 //交换内存使用率
 func (this *Mem) SwapUsedRateFunc(args string) string {
 	return FloatToString(this.SwapUsedRate)
