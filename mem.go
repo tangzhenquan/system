@@ -96,7 +96,7 @@ func (this *Mem) Collect() error {
 	if this.MemTotal > 0 {
 		this.MemUsedRate = float64(this.MemUsed) / float64(this.MemTotal) * 100
 		if this.MemAvailable > 0 {
-			this.MemAvailableRate = float64(this.MemAvailableRate) / float64(this.MemTotal) * 100
+			this.MemAvailableRate = float64(this.MemAvailable) / float64(this.MemTotal) * 100
 		} else {
 			this.MemAvailableRate = 100 - this.MemUsedRate
 		}
